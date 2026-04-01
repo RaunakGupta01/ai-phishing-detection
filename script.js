@@ -2,7 +2,7 @@
    AI Phishing Shield — Frontend Logic v3
    ================================================== */
 
-const BASE = "http://127.0.0.1:8001";
+const BASE = "https://ai-phishing-detection-x476.onrender.com";
 const GOOGLE_CLIENT_ID = "634583123258-jitpku74o34oaijj17sefeh4iv99ujls.apps.googleusercontent.com";
 
 let authToken = localStorage.getItem("authToken") || null;
