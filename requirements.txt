@@ -10,3 +10,4 @@ bcrypt
 python-jose
 passlib
 PyJWT
+requests
