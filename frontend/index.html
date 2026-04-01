@@ -1,463 +1,409 @@
 <!doctype html>
 <html lang="en">
 <head>
-  
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#080e1a"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>AI Phishing Shield</title>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css"/>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4L8 14v18c0 14 10.8 27.1 24 30 13.2-2.9 24-16 24-30V14L32 4z' fill='%230d2137' stroke='%2363ffb4' stroke-width='2'/%3E%3Cpath d='M22 32l7 7 13-13' stroke='%2363ffb4' stroke-width='3' fill='none'/%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4L8 14v18c0 14 10.8 27.1 24 30 13.2-2.9 24-16 24-30V14L32 4z' fill='%230d2137' stroke='%2363ffb4' stroke-width='2'/%3E%3Cpath d='M22 32l7 7 13-13' stroke='%2363ffb4' stroke-width='3' fill='none'/%3E%3C/svg%3E">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="styles.css"/>
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Google GSI — loaded with onload callback so we know exactly when it's ready -->
+  <script src="https://accounts.google.com/gsi/client" onload="initGoogleSignIn()" onerror="onGsiError()" async defer></script>
 </head>
 <body>
 
+<!-- ========== SPLASH SCREEN ========== -->
+<div id="splashScreen" class="splash">
+  <div class="splash-content">
+    <div class="splash-shield">
+      <svg viewBox="0 0 64 64" fill="none">
+        <path d="M32 4L8 14v18c0 14 10.8 27.1 24 30 13.2-2.9 24-16 24-30V14L32 4z"
+          fill="url(#sg_s)" stroke="rgba(99,255,180,0.25)" stroke-width="1"/>
+        <path d="M22 32l7 7 13-13" stroke="#63ffb4" stroke-width="3"
+          stroke-linecap="round" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="sg_s" x1="8" y1="4" x2="56" y2="64" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0d2137"/><stop offset="1" stop-color="#0a3352"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="splash-name">PhishingShield</div>
+    <div class="splash-loader">
+      <div class="splash-bar"><div class="splash-bar-fill" id="splashBar"></div></div>
+    </div>
+    <div class="splash-status" id="splashStatus">Initializing...</div>
+  </div>
+</div>
+
+<!-- Matrix bg -->
 <canvas id="matrixCanvas" class="matrix-bg"></canvas>
 
 <!-- ========== AUTH SECTION ========== -->
-<div id="authSection" class="auth-section">
-  <div class="auth-inner">
+<div id="authSection" class="auth-section hidden">
+  <div class="auth-wrap">
+
+    <!-- Brand (desktop left / mobile top) -->
     <div class="auth-brand">
-      <div class="shield-icon">
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M32 4L8 14v18c0 14 10.8 27.1 24 30 13.2-2.9 24-16 24-30V14L32 4z" fill="url(#sg)" stroke="rgba(99,255,180,0.4)" stroke-width="1.5"/>
-          <path d="M22 32l7 7 13-13" stroke="#63ffb4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <div class="brand-logo">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 4L8 14v18c0 14 10.8 27.1 24 30 13.2-2.9 24-16 24-30V14L32 4z"
+            fill="url(#sg_b)" stroke="rgba(99,255,180,0.35)" stroke-width="1.5"/>
+          <path d="M22 32l7 7 13-13" stroke="#63ffb4" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round"/>
           <defs>
-            <linearGradient id="sg" x1="8" y1="4" x2="56" y2="64" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#0d2137"/>
-              <stop offset="1" stop-color="#0a3352"/>
+            <linearGradient id="sg_b" x1="8" y1="4" x2="56" y2="64" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0d2137"/><stop offset="1" stop-color="#0a3352"/>
             </linearGradient>
           </defs>
         </svg>
       </div>
       <h1>Phishing<span class="accent">Shield</span></h1>
       <p>AI-powered threat detection for emails &amp; links</p>
-      <div class="trust-badges">
+      <div class="brand-badges">
         <span>🔒 JWT Secured</span>
         <span>🤖 ML Powered</span>
         <span>⚡ Real-time</span>
       </div>
     </div>
 
-    <div class="auth-box">
+    <!-- Card -->
+    <div class="auth-card">
+
       <div class="auth-tabs">
-        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
-        <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Sign Up</button>
+        <button class="tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" id="tabRegister" onclick="switchTab('register')">Sign Up</button>
       </div>
 
       <!-- LOGIN -->
       <div id="loginForm" class="auth-form">
-        <div id="googleSignInBtn" class="g-btn-container"></div>
+
+        <!-- Google Sign-In container with skeleton placeholder -->
+        <div class="g-container">
+          <div id="googleSignInBtn" class="g-btn-slot"></div>
+          <div class="g-skeleton" id="gSkelLogin">
+            <svg class="g-logo" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </div>
+        </div>
+
         <div class="divider"><span>or</span></div>
+
         <div class="field">
-          <label>Username</label>
-          <div class="field-wrap">
-            <span class="field-icon">👤</span>
-            <input id="loginUser" type="text" placeholder="your_username" autocomplete="username"/>
+          <label>USERNAME</label>
+          <div class="input-row">
+            <span class="fi">👤</span>
+            <input id="loginUser" type="text" placeholder="your_username"
+              autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"/>
           </div>
         </div>
+
         <div class="field">
-          <label>Password</label>
-          <div class="field-wrap">
-            <span class="field-icon">🔑</span>
-            <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"/>
-            <button class="eye-btn" onclick="togglePass('loginPass',this)" tabindex="-1">👁</button>
+          <label>PASSWORD</label>
+          <div class="input-row">
+            <span class="fi">🔑</span>
+            <input id="loginPass" type="password" placeholder="••••••••"
+              autocomplete="current-password"/>
+            <button class="eye-btn" onclick="togglePass('loginPass',this)" type="button">👁</button>
           </div>
         </div>
-        <button class="btn-cta" onclick="login()">Sign In →</button>
-        <div class="auth-links">
-          <button class="text-btn" onclick="showForgot()">Forgot password?</button>
-        </div>
-        <div id="loginMsg" class="msg-area"></div>
+
+        <button class="cta-btn" id="loginBtn" onclick="login()">
+          <span id="loginBtnTxt">Sign In →</span>
+          <div class="btn-spin hidden" id="loginSpin"></div>
+        </button>
+
+        <p class="center-link"><button class="ghost-btn" onclick="showForgot()">Forgot password?</button></p>
+        <div id="loginMsg" class="msg"></div>
       </div>
 
       <!-- REGISTER -->
       <div id="registerForm" class="auth-form hidden">
-        <div id="googleSignUpBtn" class="g-btn-container"></div>
+
+        <div class="g-container">
+          <div id="googleSignUpBtn" class="g-btn-slot"></div>
+          <div class="g-skeleton" id="gSkelReg">
+            <svg class="g-logo" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </div>
+        </div>
+
         <div class="divider"><span>or</span></div>
+
         <div class="field">
-          <label>Username</label>
-          <div class="field-wrap">
-            <span class="field-icon">👤</span>
-            <input id="regUser" type="text" placeholder="choose_username"/>
+          <label>USERNAME</label>
+          <div class="input-row">
+            <span class="fi">👤</span>
+            <input id="regUser" type="text" placeholder="choose_username"
+              autocapitalize="none" autocorrect="off"/>
           </div>
         </div>
+
         <div class="field">
-          <label>Email <span class="opt">(optional)</span></label>
-          <div class="field-wrap">
-            <span class="field-icon">📧</span>
-            <input id="regEmail" type="email" placeholder="you@example.com"/>
+          <label>EMAIL <span class="opt">(optional)</span></label>
+          <div class="input-row">
+            <span class="fi">📧</span>
+            <input id="regEmail" type="email" placeholder="you@email.com"/>
           </div>
         </div>
+
         <div class="field">
-          <label>Password</label>
-          <div class="field-wrap">
-            <span class="field-icon">🔒</span>
-            <input id="regPass" type="password" placeholder="min. 6 characters" oninput="updateStrength(this.value)"/>
-            <button class="eye-btn" onclick="togglePass('regPass',this)" tabindex="-1">👁</button>
+          <label>PASSWORD</label>
+          <div class="input-row">
+            <span class="fi">🔒</span>
+            <input id="regPass" type="password" placeholder="min. 6 characters"
+              oninput="updateStrength(this.value)"/>
+            <button class="eye-btn" onclick="togglePass('regPass',this)" type="button">👁</button>
           </div>
-          <div class="strength-wrap">
-            <div class="strength-bar"><div id="strengthFill" class="strength-fill"></div></div>
-            <span id="strengthText" class="strength-text"></span>
+          <div class="str-row">
+            <div class="str-bar"><div id="strengthFill" class="str-fill"></div></div>
+            <span id="strengthText" class="str-lbl"></span>
           </div>
         </div>
-        <button class="btn-cta" onclick="register()">Create Account →</button>
-        <div id="registerMsg" class="msg-area"></div>
+
+        <button class="cta-btn" id="regBtn" onclick="register()">
+          <span id="regBtnTxt">Create Account →</span>
+          <div class="btn-spin hidden" id="regSpin"></div>
+        </button>
+        <div id="registerMsg" class="msg"></div>
       </div>
 
       <!-- FORGOT -->
       <div id="forgotForm" class="auth-form hidden">
-        <h3 style="margin-bottom:16px">Reset Password</h3>
+        <h3 class="form-h">Reset Password</h3>
         <div id="forgotStep1">
           <div class="field">
-            <label>Your Username</label>
-            <div class="field-wrap">
-              <span class="field-icon">👤</span>
-              <input id="forgotUser" placeholder="username"/>
+            <label>USERNAME</label>
+            <div class="input-row">
+              <span class="fi">👤</span>
+              <input id="forgotUser" placeholder="your_username" autocapitalize="none"/>
             </div>
           </div>
-          <button class="btn-cta" onclick="sendReset()">Send Reset Link →</button>
-          <div class="auth-links"><button class="text-btn" onclick="switchTab('login')">← Back to login</button></div>
-          <div id="forgotMsg" class="msg-area"></div>
+          <button class="cta-btn" onclick="sendReset()">Send Reset Link →</button>
+          <p class="center-link"><button class="ghost-btn" onclick="switchTab('login')">← Back to login</button></p>
+          <div id="forgotMsg" class="msg"></div>
         </div>
         <div id="forgotStep2" class="hidden">
           <div class="field">
-            <label>New Password</label>
-            <div class="field-wrap"><span class="field-icon">🔒</span><input id="newPass" type="password" placeholder="New password"/></div>
+            <label>NEW PASSWORD</label>
+            <div class="input-row"><span class="fi">🔒</span><input id="newPass" type="password" placeholder="New password"/></div>
           </div>
           <div class="field">
-            <label>Confirm Password</label>
-            <div class="field-wrap"><span class="field-icon">🔒</span><input id="confirmPass" type="password" placeholder="Confirm password"/></div>
+            <label>CONFIRM PASSWORD</label>
+            <div class="input-row"><span class="fi">🔒</span><input id="confirmPass" type="password" placeholder="Confirm password"/></div>
           </div>
-          <button class="btn-cta" onclick="resetPassword()">Update Password →</button>
-          <div id="resetMsg" class="msg-area"></div>
+          <button class="cta-btn" onclick="resetPassword()">Update Password →</button>
+          <div id="resetMsg" class="msg"></div>
         </div>
       </div>
-    </div>
-  </div>
+
+    </div><!-- /auth-card -->
+  </div><!-- /auth-wrap -->
 </div>
 
 <!-- ========== MAIN APP ========== -->
 <div id="mainApp" class="main-app hidden">
 
-  <!-- SIDEBAR -->
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="sb-icon">🛡️</div>
-      <span>PhishingShield</span>
+    <div class="sb-brand">
+      <span>🛡️</span><span>PhishingShield</span>
     </div>
-
-    <nav class="sidebar-nav">
-      <button class="snav-item active" id="snav-scan" onclick="showSection('scan')">
-        <span class="snav-icon">🔍</span><span class="snav-label">Scan</span>
-      </button>
-      <button class="snav-item" id="snav-history" onclick="showSection('history')">
-        <span class="snav-icon">📋</span><span class="snav-label">History</span>
-      </button>
-      <button class="snav-item" id="snav-stats" onclick="showSection('stats')">
-        <span class="snav-icon">📊</span><span class="snav-label">Statistics</span>
-      </button>
-      <button class="snav-item" id="snav-admin" style="display:none" onclick="showSection('admin')">
-        <span class="snav-icon">⚙️</span><span class="snav-label">Admin</span>
-      </button>
+    <nav class="sb-nav">
+      <button class="snav active" id="snav-scan"    onclick="showSection('scan')">   <span>🔍</span><span>Scan</span></button>
+      <button class="snav"        id="snav-history"  onclick="showSection('history')"><span>📋</span><span>History</span></button>
+      <button class="snav"        id="snav-stats"    onclick="showSection('stats')">  <span>📊</span><span>Statistics</span></button>
+      <button class="snav hidden" id="snav-admin"    onclick="showSection('admin')">  <span>⚙️</span><span>Admin</span></button>
     </nav>
-
-    <div class="sidebar-user">
-      <img id="sidebarAvatar" class="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=default" alt="avatar"/>
-      <div class="user-info">
-        <div id="sidebarUsername" class="user-name">User</div>
-        <div id="sidebarRole" class="user-role">Member</div>
+    <div class="sb-foot">
+      <img id="sbAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=user" class="sb-av" alt=""/>
+      <div class="sb-info">
+        <div id="sbName" class="sb-uname">User</div>
+        <div id="sbRole" class="sb-urole">Member</div>
       </div>
-      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+      <button class="sb-out" onclick="logout()" title="Logout">⏻</button>
     </div>
   </aside>
+  <div class="sb-overlay hidden" id="sbOverlay" onclick="closeSidebar()"></div>
 
-  <!-- MAIN CONTENT -->
+  <!-- Main -->
   <main class="app-main">
-
-    <!-- Top Bar -->
     <header class="topbar">
-      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-      <div class="topbar-title" id="topbarTitle">Dashboard</div>
-      <div class="topbar-right">
-        <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">🌙</button>
-        <div class="status-dot" id="apiStatus" title="API Status">
-          <span class="dot"></span><span class="status-label">API</span>
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <span id="topbarTitle" class="tb-title">Threat Scanner</span>
+      <div class="tb-right">
+        <button id="themeBtn" class="icon-btn" onclick="toggleTheme()">🌙</button>
+        <div class="api-dot-wrap" id="apiStatus" title="API status">
+          <span class="adot"></span>
+          <span class="albl">API</span>
         </div>
       </div>
     </header>
 
-    <!-- ===== SCAN SECTION ===== -->
-    <section id="sectionScan" class="page-section">
-      <div class="page-header">
-        <div>
-          <h2>Threat Scanner</h2>
-          <p>Analyze emails, messages, and URLs for phishing threats</p>
-        </div>
-        <div class="scan-counter-wrap">
-          <div class="scan-mini-stat" id="miniStatToday">
-            <span class="mstat-val" id="miniTodayVal">0</span>
-            <span class="mstat-lbl">Today</span>
-          </div>
-          <div class="scan-mini-stat phish" id="miniStatPhish">
-            <span class="mstat-val" id="miniPhishVal">0</span>
-            <span class="mstat-lbl">Detected</span>
-          </div>
+    <!-- SCAN PAGE -->
+    <section id="sectionScan" class="page">
+      <div class="page-hd">
+        <div><h2>Threat Scanner</h2><p>Analyze emails, messages &amp; URLs for threats</p></div>
+        <div class="mstats">
+          <div class="msc"><span class="msv" id="miniTodayVal">0</span><span class="msl">Today</span></div>
+          <div class="msc r"><span class="msv" id="miniPhishVal">0</span><span class="msl">Found</span></div>
         </div>
       </div>
 
-      <div class="scan-tabs">
-        <button class="scan-tab active" id="stab-text" onclick="switchScanTab('text')">
-          <span>📧</span> Email / Text
-        </button>
-        <button class="scan-tab" id="stab-url" onclick="switchScanTab('url')">
-          <span>🔗</span> URL Check
-        </button>
-        <button class="scan-tab" id="stab-deep" onclick="switchScanTab('deep')">
-          <span>🧬</span> Deep Analysis
-        </button>
-        <button class="scan-tab" id="stab-batch" onclick="switchScanTab('batch')">
-          <span>📦</span> Batch Scan
-        </button>
+      <div class="stabs">
+        <button class="stab on" id="stab-text"  onclick="switchScanTab('text')"> 📧 Text</button>
+        <button class="stab"    id="stab-url"   onclick="switchScanTab('url')">  🔗 URL</button>
+        <button class="stab"    id="stab-deep"  onclick="switchScanTab('deep')"> 🧬 Deep</button>
+        <button class="stab"    id="stab-batch" onclick="switchScanTab('batch')">📦 Batch</button>
       </div>
 
-      <!-- Text Panel -->
-      <div id="panel-text" class="scan-panel">
-        <div class="scan-input-area">
-          <textarea id="textInput" maxlength="2000" placeholder="Paste your suspicious email or SMS here…
-
-Example: 'URGENT: Your PayPal account has been limited. Click here immediately to restore access: http://paypa1-verify.com/login'"
+      <div id="panel-text" class="s-panel">
+        <div class="tawrap">
+          <textarea id="textInput" maxlength="2000"
+            placeholder="Paste suspicious email or SMS here…&#10;&#10;Example: 'URGENT: Your PayPal account is limited. Verify: http://paypa1.com'"
             oninput="updateCharCount(this,'textCount',2000)"></textarea>
-          <div class="input-meta">
-            <span id="textCount" class="char-count">0 / 2000</span>
-            <button class="clear-btn" onclick="clearInput('textInput','textCount',2000)">✕ Clear</button>
+          <div class="tafooter">
+            <span id="textCount" class="cc">0 / 2000</span>
+            <button class="clrbtn" onclick="clearInput('textInput','textCount',2000)">✕ Clear</button>
           </div>
         </div>
-        <div class="quick-examples">
-          <span class="ex-label">Quick test:</span>
-          <button class="ex-btn danger-ex" onclick="fillExample('text','phish')">🚨 Phishing sample</button>
-          <button class="ex-btn safe-ex" onclick="fillExample('text','safe')">✅ Safe sample</button>
+        <div class="samples">
+          <span>Test:</span>
+          <button class="sbtn bad" onclick="fillExample('text','phish')">🚨 Phishing</button>
+          <button class="sbtn ok"  onclick="fillExample('text','safe')">✅ Safe</button>
         </div>
-        <button class="scan-cta" onclick="scanText()">
-          <span class="cta-icon">⚡</span> Analyze Now
-        </button>
+        <button class="go-btn" onclick="scanText()">⚡ Analyze Now</button>
       </div>
 
-      <!-- URL Panel -->
-      <div id="panel-url" class="scan-panel hidden">
-        <div class="url-box">
-          <div class="url-protocol">https://</div>
-          <input id="urlInput" type="text" placeholder="suspicious-domain.com/path?query=value" class="url-field"/>
-          <button class="url-paste-btn" onclick="pasteFromClipboard()">📋 Paste</button>
+      <div id="panel-url" class="s-panel hidden">
+        <div class="urlbar">
+          <span class="proto">https://</span>
+          <input id="urlInput" type="text" class="url-in"
+            placeholder="suspicious-site.com/verify?token=abc"
+            autocapitalize="none" autocorrect="off" spellcheck="false"/>
+          <button class="pastebtn" onclick="pasteUrl()">📋</button>
         </div>
-        <div class="quick-examples">
-          <span class="ex-label">Test with:</span>
-          <button class="ex-btn danger-ex" onclick="fillExample('url','phish')">🚨 Phishing URL</button>
-          <button class="ex-btn safe-ex" onclick="fillExample('url','safe')">✅ Safe URL</button>
+        <div class="samples">
+          <span>Test:</span>
+          <button class="sbtn bad" onclick="fillExample('url','phish')">🚨 Phishing</button>
+          <button class="sbtn ok"  onclick="fillExample('url','safe')">✅ Safe</button>
         </div>
-        <div class="url-tips">
-          <div class="tip-item">💡 Paste the full URL including http:// or https://</div>
-          <div class="tip-item">💡 Look for misspellings like paypa1 instead of paypal</div>
+        <div class="url-hints">
+          <span>💡 Full URL including http:// or https://</span>
+          <span>💡 Watch for typos: paypa<b>1</b> vs paypa<b>l</b></span>
         </div>
-        <button class="scan-cta" onclick="scanUrl()">
-          <span class="cta-icon">🔗</span> Scan URL
-        </button>
+        <button class="go-btn" onclick="scanUrl()">🔗 Scan URL</button>
       </div>
 
-      <!-- Deep Panel -->
-      <div id="panel-deep" class="scan-panel hidden">
-        <div class="scan-input-area">
-          <textarea id="deepInput" maxlength="2000" placeholder="Paste content for deep multi-layer analysis…
-Extracts entities, detects patterns, analyzes sentiment, and gives detailed security recommendations."
+      <div id="panel-deep" class="s-panel hidden">
+        <div class="tawrap">
+          <textarea id="deepInput" maxlength="2000"
+            placeholder="Paste content for deep multi-layer analysis…&#10;Detects entities, patterns, and sentiment."
             oninput="updateCharCount(this,'deepCount',2000)"></textarea>
-          <div class="input-meta">
-            <span id="deepCount" class="char-count">0 / 2000</span>
-            <button class="clear-btn" onclick="clearInput('deepInput','deepCount',2000)">✕ Clear</button>
+          <div class="tafooter">
+            <span id="deepCount" class="cc">0 / 2000</span>
+            <button class="clrbtn" onclick="clearInput('deepInput','deepCount',2000)">✕ Clear</button>
           </div>
         </div>
-        <button class="scan-cta purple-cta" onclick="scanDeep()">
-          <span class="cta-icon">🧬</span> Deep Analysis
-        </button>
+        <button class="go-btn purple" onclick="scanDeep()">🧬 Deep Analysis</button>
       </div>
 
-      <!-- Batch Panel -->
-      <div id="panel-batch" class="scan-panel hidden">
-        <div class="batch-info">
-          <div class="batch-info-icon">📦</div>
-          <div>
-            <strong>Batch URL Scanner</strong>
-            <p>Enter multiple URLs, one per line</p>
-          </div>
-        </div>
-        <textarea id="batchInput" rows="6" placeholder="http://suspicious1.com
-http://example.com
-http://paypa1-verify.net
-https://google.com"></textarea>
-        <button class="scan-cta" onclick="scanBatch()">
-          <span class="cta-icon">📦</span> Scan All URLs
-        </button>
+      <div id="panel-batch" class="s-panel hidden">
+        <div class="batch-hdr"><span>📦</span><div><strong>Batch URL Scanner</strong><p>One URL per line</p></div></div>
+        <textarea id="batchInput" class="batch-ta" rows="6"
+          placeholder="https://google.com&#10;http://paypa1-verify.net&#10;https://github.com"></textarea>
+        <button class="go-btn" onclick="scanBatch()">📦 Scan All</button>
         <div id="batchResults" class="batch-results hidden"></div>
       </div>
 
-      <!-- RESULT AREA -->
-      <div id="resultArea" class="result-area hidden"></div>
-      <div id="deepResultArea" class="deep-result-area hidden"></div>
+      <div id="resultArea"     class="result-box hidden"></div>
+      <div id="deepResultArea" class="deep-box hidden"></div>
 
-      <!-- Loading -->
-      <div id="scanLoader" class="scan-loader hidden">
-        <div class="loader-ring"><div></div><div></div><div></div><div></div></div>
+      <div id="scanLoader" class="s-loader hidden">
+        <div class="ldring"><div></div><div></div><div></div><div></div></div>
         <p id="loaderText">Analyzing...</p>
-        <div class="loader-steps" id="loaderSteps"></div>
+        <div id="loaderSteps" class="ldsteps"></div>
       </div>
     </section>
 
-    <!-- ===== HISTORY SECTION ===== -->
-    <section id="sectionHistory" class="page-section hidden">
-      <div class="page-header">
-        <div>
-          <h2>Scan History</h2>
-          <p>Your recent detection results</p>
-        </div>
-        <div class="header-btns">
-          <button class="hdr-btn" onclick="exportCSV()">⬇️ CSV</button>
-          <button class="hdr-btn" onclick="loadHistory()">🔄 Refresh</button>
+    <!-- HISTORY PAGE -->
+    <section id="sectionHistory" class="page hidden">
+      <div class="page-hd">
+        <div><h2>Scan History</h2><p>Your detection results</p></div>
+        <div class="hd-btns">
+          <button class="hbtn" onclick="exportCSV()">⬇️ CSV</button>
+          <button class="hbtn" onclick="loadHistory()">🔄</button>
         </div>
       </div>
-
-      <div class="filter-bar">
-        <div class="search-wrap">
-          <span>🔎</span>
-          <input id="histSearch" type="text" placeholder="Search content..." oninput="applyFilters()"/>
-        </div>
-        <select id="fType" onchange="applyFilters()">
-          <option value="">All Types</option>
-          <option value="text">Text</option>
-          <option value="url">URL</option>
-        </select>
-        <select id="fLabel" onchange="applyFilters()">
-          <option value="">All Results</option>
-          <option value="phishing">Phishing</option>
-          <option value="safe">Safe</option>
-        </select>
-        <select id="fRisk" onchange="applyFilters()">
-          <option value="">All Risk</option>
-          <option value="high">🔴 High</option>
-          <option value="medium">🟡 Medium</option>
-          <option value="low">🟢 Low</option>
-        </select>
+      <div class="filterbar">
+        <div class="searchbox"><span>🔎</span><input id="histSearch" placeholder="Search..." oninput="applyFilters()"/></div>
+        <select id="fType"  onchange="applyFilters()"><option value="">All Types</option><option value="text">Text</option><option value="url">URL</option></select>
+        <select id="fLabel" onchange="applyFilters()"><option value="">All Results</option><option value="phishing">Phishing</option><option value="safe">Safe</option></select>
+        <select id="fRisk"  onchange="applyFilters()"><option value="">All Risk</option><option value="high">🔴 High</option><option value="medium">🟡 Medium</option><option value="low">🟢 Low</option></select>
       </div>
+      <div id="historyContainer" class="hlist"></div>
+    </section>
 
-      <div id="historyContainer" class="history-container">
-        <div class="empty-state">
-          <div class="es-icon">📭</div>
-          <h3>No scans yet</h3>
-          <p>Start scanning emails or URLs to see your history here</p>
-          <button class="btn-cta" style="margin-top:16px;width:auto;padding:10px 24px" onclick="showSection('scan')">Start Scanning →</button>
-        </div>
+    <!-- STATS PAGE -->
+    <section id="sectionStats" class="page hidden">
+      <div class="page-hd">
+        <div><h2>Statistics</h2><p>Your activity overview</p></div>
+        <button class="hbtn" onclick="loadStats()">🔄 Refresh</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi">       <div class="ki">📊</div><div><div class="kv" id="kpiTotal">—</div>   <div class="kl">Total Scans</div></div></div>
+        <div class="kpi red">   <div class="ki">🚨</div><div><div class="kv" id="kpiPhishing">—</div><div class="kl">Phishing</div></div></div>
+        <div class="kpi green"> <div class="ki">✅</div><div><div class="kv" id="kpiSafe">—</div>    <div class="kl">Safe</div></div></div>
+        <div class="kpi amber"> <div class="ki">📈</div><div><div class="kv" id="kpiRate">—</div>    <div class="kl">Detection Rate</div></div></div>
+      </div>
+      <div class="cgrid">
+        <div class="ccard"><h4>Results</h4><div class="cc"><canvas id="chartDoughnut"></canvas></div></div>
+        <div class="ccard"><h4>Risk Levels</h4><div class="cc"><canvas id="chartBar"></canvas></div></div>
+        <div class="ccard full"><h4>Scan Types</h4><div class="cc sm"><canvas id="chartTypes"></canvas></div></div>
       </div>
     </section>
 
-    <!-- ===== STATS SECTION ===== -->
-    <section id="sectionStats" class="page-section hidden">
-      <div class="page-header">
-        <div>
-          <h2>Statistics</h2>
-          <p>Your scanning activity overview</p>
-        </div>
-        <button class="hdr-btn" onclick="loadStats()">🔄 Refresh</button>
+    <!-- ADMIN PAGE -->
+    <section id="sectionAdmin" class="page hidden">
+      <div class="page-hd">
+        <div><h2>Admin Dashboard</h2><p>System-wide stats</p></div>
+        <button class="hbtn" onclick="loadAdminData()">🔄</button>
       </div>
-
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon">📊</div>
-          <div class="kpi-body">
-            <div class="kpi-val" id="kpiTotal">—</div>
-            <div class="kpi-lbl">Total Scans</div>
-          </div>
-          <div class="kpi-trend up" id="kpiTotalTrend"></div>
-        </div>
-        <div class="kpi-card red">
-          <div class="kpi-icon">🚨</div>
-          <div class="kpi-body">
-            <div class="kpi-val" id="kpiPhishing">—</div>
-            <div class="kpi-lbl">Phishing Found</div>
-          </div>
-        </div>
-        <div class="kpi-card green">
-          <div class="kpi-icon">✅</div>
-          <div class="kpi-body">
-            <div class="kpi-val" id="kpiSafe">—</div>
-            <div class="kpi-lbl">Safe Scans</div>
-          </div>
-        </div>
-        <div class="kpi-card amber">
-          <div class="kpi-icon">📈</div>
-          <div class="kpi-body">
-            <div class="kpi-val" id="kpiRate">—</div>
-            <div class="kpi-lbl">Detection Rate</div>
-          </div>
-        </div>
+      <div class="kpis">
+        <div class="kpi">      <div class="ki">👥</div><div><div class="kv" id="admUsers">—</div>  <div class="kl">Users</div></div></div>
+        <div class="kpi">      <div class="ki">🔍</div><div><div class="kv" id="admScans">—</div>  <div class="kl">Scans</div></div></div>
+        <div class="kpi red">  <div class="ki">🚨</div><div><div class="kv" id="admPhish">—</div>  <div class="kl">Phishing</div></div></div>
+        <div class="kpi green"><div class="ki">💪</div><div><div class="kv" id="admProtect">—</div><div class="kl">Protection</div></div></div>
       </div>
-
-      <div class="charts-row">
-        <div class="chart-box">
-          <div class="chart-header">
-            <h4>Results Distribution</h4>
-            <select id="chartPeriod" onchange="loadStats()">
-              <option value="all">All time</option>
-            </select>
-          </div>
-          <div class="chart-wrap"><canvas id="chartDoughnut"></canvas></div>
-        </div>
-        <div class="chart-box">
-          <div class="chart-header"><h4>Risk Breakdown</h4></div>
-          <div class="chart-wrap"><canvas id="chartBar"></canvas></div>
-        </div>
-      </div>
-
-      <div class="chart-box full-width" style="margin-top:16px">
-        <div class="chart-header"><h4>Scan Types</h4></div>
-        <div class="chart-wrap" style="height:200px"><canvas id="chartTypes"></canvas></div>
-      </div>
-    </section>
-
-    <!-- ===== ADMIN SECTION ===== -->
-    <section id="sectionAdmin" class="page-section hidden">
-      <div class="page-header">
-        <div><h2>Admin Dashboard</h2><p>System-wide statistics</p></div>
-        <button class="hdr-btn" onclick="loadAdminData()">🔄 Refresh</button>
-      </div>
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon">👥</div>
-          <div class="kpi-body"><div class="kpi-val" id="admUsers">—</div><div class="kpi-lbl">Total Users</div></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🔍</div>
-          <div class="kpi-body"><div class="kpi-val" id="admScans">—</div><div class="kpi-lbl">Total Scans</div></div>
-        </div>
-        <div class="kpi-card red">
-          <div class="kpi-icon">🚨</div>
-          <div class="kpi-body"><div class="kpi-val" id="admPhish">—</div><div class="kpi-lbl">Phishing Detected</div></div>
-        </div>
-        <div class="kpi-card green">
-          <div class="kpi-icon">💪</div>
-          <div class="kpi-body"><div class="kpi-val" id="admProtect">—</div><div class="kpi-lbl">Protection Rate</div></div>
-        </div>
-      </div>
-      <h3 style="margin:24px 0 12px">Recent Activity</h3>
-      <div id="adminActivity" class="history-container"></div>
+      <h3 style="margin:20px 0 12px;font-size:15px;color:var(--text2)">Recent Activity</h3>
+      <div id="adminActivity" class="hlist"></div>
     </section>
 
   </main>
 </div>
 
-<!-- TOAST -->
-<div id="toastContainer" class="toast-container"></div>
+<div id="toastWrap" class="toast-wrap"></div>
 
-<script src="/script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
