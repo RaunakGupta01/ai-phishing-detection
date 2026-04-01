@@ -71,6 +71,26 @@ body {
   filter:drop-shadow(0 0 24px rgba(99,255,180,0.5));
   animation:pulse-shield 1.5s ease-in-out infinite;
 }
+.g-btn-slot iframe {
+  width: 100% !important;
+}
+
+.g-container {
+  position: relative;
+  z-index: 5;
+}
+
+.g-skeleton {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.g-btn-slot {
+  position: relative;
+  z-index: 2;
+}
 .splash-name {
   font-size:22px; font-weight:800; color:var(--acc); letter-spacing:-0.3px;
 }
