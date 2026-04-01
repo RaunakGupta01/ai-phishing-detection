@@ -33,7 +33,7 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        "https://ai-phishing-detection-mozk.vercel.app"
+        "https://ai-phishing-detection-opal.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
